@@ -1,0 +1,241 @@
+// AI Social Coach - Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USUARIOS Y AUTENTICACIÓN
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  avatar        String?
+  
+  // Suscripción
+  subscriptionTier    SubscriptionTier   @default(FREE)
+  subscriptionStatus  SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId    String?            @unique
+  stripeSubscriptionId String?           @unique
+  subscriptionEndsAt  DateTime?
+  
+  // Créditos y límites
+  conversationsThisMonth Int      @default(0)
+  lastResetDate         DateTime @default(now())
+  
+  // Relaciones
+  conversations  Conversation[]
+  analyses       Analysis[]
+  sessions       Session[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([email])
+  @@index([stripeCustomerId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionToken String   @unique
+  expires      DateTime
+  
+  @@index([userId])
+  @@index([sessionToken])
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  EXPIRED
+}
+
+// ============================================
+// CONVERSACIONES
+// ============================================
+
+model Conversation {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Configuración
+  scenario       Scenario @default(CASUAL)
+  aiPersonality  String   @default("friendly") // friendly, flirty, challenging
+  difficulty     Int      @default(5) // 1-10
+  
+  // Estado
+  status         ConversationStatus @default(ACTIVE)
+  duration       Int                @default(0) // segundos
+  messageCount   Int                @default(0)
+  
+  // Metadata
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  
+  // Relaciones
+  messages  Message[]
+  analysis  Analysis?
+  
+  @@index([userId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+enum Scenario {
+  CASUAL        // Conversación casual
+  DATE          // Primera cita
+  PROFESSIONAL  // Networking profesional
+  FLIRTY        // Coqueteo avanzado
+  CHALLENGING   // Persona difícil
+}
+
+enum ConversationStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+// ============================================
+// MENSAJES
+// ============================================
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  role      MessageRole
+  content   String      @db.Text
+  audioUrl  String?     // URL del audio en Vercel Blob
+  
+  // Metadata de IA
+  aiEmotion    String?  // happy, neutral, annoyed, interested
+  aiInterest   Int?     // 1-10, nivel de interés de la IA
+  
+  timestamp DateTime @default(now())
+  
+  @@index([conversationId])
+  @@index([timestamp])
+}
+
+enum MessageRole {
+  USER
+  AI
+}
+
+// ============================================
+// ANÁLISIS Y RESULTADOS
+// ============================================
+
+model Analysis {
+  id             String       @id @default(cuid())
+  conversationId String       @unique
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Puntuaciones generales (1-10)
+  overallScore Int
+  confidence   Int
+  charisma     Int
+  humor        Int
+  empathy      Int
+  attraction   Int
+  
+  // Análisis detallado
+  strengths       String[] // Array de fortalezas
+  weaknesses      String[] // Array de debilidades
+  recommendations String[] // Array de recomendaciones
+  
+  // Análisis de conversación
+  bestMoments  String   @db.Text // JSON con mejores momentos
+  redFlags     String   @db.Text // JSON con señales de alerta
+  
+  // Feedback de IA
+  aiSummary    String   @db.Text // Resumen general
+  detailedFeedback String @db.Text // Feedback detallado
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([overallScore])
+}
+
+// ============================================
+// PROGRESO Y ESTADÍSTICAS
+// ============================================
+
+model UserStats {
+  id     String @id @default(cuid())
+  userId String @unique
+  
+  // Estadísticas generales
+  totalConversations    Int @default(0)
+  totalMinutes          Int @default(0)
+  averageScore          Int @default(0)
+  
+  // Progreso por habilidad
+  confidenceProgress    Int @default(0)
+  charismaProgress      Int @default(0)
+  humorProgress         Int @default(0)
+  empathyProgress       Int @default(0)
+  
+  // Racha
+  currentStreak         Int      @default(0)
+  longestStreak         Int      @default(0)
+  lastConversationDate  DateTime?
+  
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// PAGOS Y FACTURACIÓN
+// ============================================
+
+model Payment {
+  id               String   @id @default(cuid())
+  userId           String
+  
+  stripePaymentId  String   @unique
+  amount           Int      // en centavos
+  currency         String   @default("usd")
+  status           PaymentStatus
+  
+  plan             SubscriptionTier
+  billingPeriod    BillingPeriod
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([status])
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum BillingPeriod {
+  MONTHLY
+  YEARLY
+}
