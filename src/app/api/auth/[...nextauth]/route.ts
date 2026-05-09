@@ -1,7 +1,8 @@
 import NextAuth from 'next-auth'
-import { authOptions } from '@/lib/auth-options'
+import { authOptions } from '@/lib/auth-config'
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 export const fetchCache = 'force-no-store';
 
 const handler = NextAuth(authOptions)
