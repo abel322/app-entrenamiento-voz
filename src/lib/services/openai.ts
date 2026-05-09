@@ -1,10 +1,16 @@
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
 export class OpenAIService {
+  private openai: OpenAI | null = null
+
+  private getClient() {
+    if (!this.openai) {
+      this.openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY || 'dummy_key',
+      })
+    }
+    return this.openai
+  }
   // Generar respuesta de IA con personalidad
   async generateResponse(
     messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
@@ -14,7 +20,7 @@ export class OpenAIService {
   ): Promise<{ content: string; emotion: string; interest: number }> {
     const systemPrompt = this.buildPersonalityPrompt(personality, scenario, currentInterest)
     
-    const completion = await openai.chat.completions.create({
+    const completion = await this.getClient().chat.completions.create({
       model: 'gpt-4-turbo-preview',
       messages: [
         { role: 'system', content: systemPrompt },
@@ -34,7 +40,7 @@ export class OpenAIService {
 
   // Transcribir audio a texto (Whisper)
   async transcribeAudio(audioFile: File): Promise<string> {
-    const transcription = await openai.audio.transcriptions.create({
+    const transcription = await this.getClient().audio.transcriptions.create({
       file: audioFile,
       model: 'whisper-1',
       language: 'es',
@@ -45,7 +51,7 @@ export class OpenAIService {
 
   // Convertir texto a voz (TTS)
   async synthesizeSpeech(text: string, voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' = 'nova'): Promise<Buffer> {
-    const mp3 = await openai.audio.speech.create({
+    const mp3 = await this.getClient().audio.speech.create({
       model: 'tts-1',
       voice: voice,
       input: text,
@@ -78,7 +84,7 @@ export class OpenAIService {
   }> {
     const analysisPrompt = this.buildAnalysisPrompt(messages, scenario, duration)
     
-    const completion = await openai.chat.completions.create({
+    const completion = await this.getClient().chat.completions.create({
       model: 'gpt-4-turbo-preview',
       messages: [{ role: 'user', content: analysisPrompt }],
       temperature: 0.3,

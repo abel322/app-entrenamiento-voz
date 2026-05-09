@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { conversationService } from '@/lib/services/conversation'
 import { z } from 'zod'
+
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
 
 const messageSchema = z.object({
   conversationId: z.string(),
@@ -17,6 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
+    const { conversationService } = await import('@/lib/services/conversation')
     const body = await req.json()
     const data = messageSchema.parse(body)
 
