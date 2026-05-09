@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/db/prisma'
 import { compare } from 'bcrypt'
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 export const authOptions: NextAuthOptions = {
   providers: [
