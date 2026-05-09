@@ -2,6 +2,7 @@ import NextAuth, { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/db/prisma'
 import { compare } from 'bcrypt'
+export const dynamic = 'force-dynamic';
 
 export const authOptions: NextAuthOptions = {
   providers: [
