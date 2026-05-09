@@ -10,6 +10,8 @@ if (!process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
   console.error('CRITICAL: DATABASE_URL is missing in production!');
 }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  datasourceUrl: databaseUrl,
+})
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
