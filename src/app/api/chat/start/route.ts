@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { conversationService } from '@/lib/services/conversation'
 import { z } from 'zod'
+export const dynamic = 'force-dynamic';
 
 const startSchema = z.object({
   scenario: z.enum(['CASUAL', 'DATE', 'PROFESSIONAL', 'FLIRTY', 'CHALLENGING']),
