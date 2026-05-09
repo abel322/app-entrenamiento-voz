@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { hash } from 'bcrypt'
 import { z } from 'zod'
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 const registerSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -49,7 +51,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ user }, { status: 201 })
   } catch (error: any) {
     console.error('Error registering user:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.errors[0].message },
