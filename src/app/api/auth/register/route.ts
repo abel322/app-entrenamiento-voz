@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ user }, { status: 201 })
   } catch (error: any) {
-    console.error('Error registering user:', error)
+    console.error('ERROR_REGISTRO_DETALLE:', error)
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Error al registrar usuario' },
+      { error: error.message || 'Error al registrar usuario' },
       { status: 500 }
     )
   }
