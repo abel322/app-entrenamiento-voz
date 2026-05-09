@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db/prisma'
 import { hash } from 'bcryptjs'
 import { z } from 'zod'
+
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 export const fetchCache = 'force-no-store';
 
 const registerSchema = z.object({
@@ -13,6 +14,7 @@ const registerSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const { prisma } = await import('@/lib/db/prisma')
     const body = await req.json()
     const data = registerSchema.parse(body)
 
