@@ -1,9 +1,9 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { prisma } from '@/lib/db/prisma'
 import { compare } from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || 'secret-de-emergencia-solo-para-build',
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -16,6 +16,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email y contraseña requeridos')
         }
 
+        const { prisma } = await import('@/lib/db/prisma');
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         })
