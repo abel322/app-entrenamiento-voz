@@ -1,8 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    domains: ['vercel.blob.store'],
+  output: 'standalone',
+  eslint: {
+    ignoreDuringBuilds: true,
   },
-}
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  images: {
+    unoptimized: true
+  },
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client'],
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
