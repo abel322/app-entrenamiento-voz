@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
-import { hash } from 'bcrypt'
+import { hash } from 'bcryptjs'
 import { z } from 'zod'
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
