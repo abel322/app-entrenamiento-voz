@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { openaiService } from '@/lib/services/openai'
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,6 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
+    const { openaiService } = await import('@/lib/services/openai')
     const formData = await req.formData()
     const audioFile = formData.get('audio') as File
 

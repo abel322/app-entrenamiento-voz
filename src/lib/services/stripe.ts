@@ -1,11 +1,17 @@
 import Stripe from 'stripe'
 import { prisma } from '@/lib/db/prisma'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
-})
-
 export class StripeService {
+  private stripe: Stripe | null = null
+
+  private getClient() {
+    if (!this.stripe) {
+      this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key', {
+        apiVersion: '2024-11-20.acacia',
+      })
+    }
+    return this.stripe
+  }
   // Crear sesión de checkout
   async createCheckoutSession(
     userId: string,
@@ -38,7 +44,7 @@ export class StripeService {
     let customerId = user.stripeCustomerId
 
     if (!customerId) {
-      const customer = await stripe.customers.create({
+      const customer = await this.getClient().customers.create({
         email: user.email,
         metadata: {
           userId: user.id,
@@ -53,7 +59,7 @@ export class StripeService {
     }
 
     // Crear sesión de checkout
-    const session = await stripe.checkout.sessions.create({
+    const session = await this.getClient().checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -106,7 +112,7 @@ export class StripeService {
 
     if (!userId || !plan) return
 
-    const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+    const subscription = await this.getClient().subscriptions.retrieve(session.subscription as string)
 
     await prisma.user.update({
       where: { id: userId },
@@ -198,7 +204,7 @@ export class StripeService {
       throw new Error('No hay suscripción activa')
     }
 
-    await stripe.subscriptions.cancel(user.stripeSubscriptionId)
+    await this.getClient().subscriptions.cancel(user.stripeSubscriptionId)
 
     await prisma.user.update({
       where: { id: userId },

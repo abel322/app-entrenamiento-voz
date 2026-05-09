@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripeService } from '@/lib/services/stripe'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
-})
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
 
 export async function POST(req: NextRequest) {
+  const { stripeService } = await import('@/lib/services/stripe')
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key', {
+    apiVersion: '2024-11-20.acacia',
+  })
+
   const body = await req.text()
-  const signature = req.headers.get('stripe-signature')!
+  const signature = req.headers.get('stripe-signature') || ''
 
   let event: Stripe.Event
 
@@ -16,7 +20,7 @@ export async function POST(req: NextRequest) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET || 'dummy_key'
     )
   } catch (error: any) {
     console.error('Webhook signature verification failed:', error.message)

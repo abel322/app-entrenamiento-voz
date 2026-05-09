@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { stripeService } from '@/lib/services/stripe'
 import { z } from 'zod'
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
 
 const createSubscriptionSchema = z.object({
   plan: z.enum(['PRO', 'PREMIUM']),
@@ -15,6 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
+    const { stripeService } = await import('@/lib/services/stripe')
     const body = await req.json()
     const data = createSubscriptionSchema.parse(body)
 

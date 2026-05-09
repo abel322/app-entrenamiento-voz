@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { openaiService } from '@/lib/services/openai'
 import { z } from 'zod'
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
 
 const synthesizeSchema = z.object({
   text: z.string().min(1),
@@ -15,6 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
+    const { openaiService } = await import('@/lib/services/openai')
     const body = await req.json()
     const data = synthesizeSchema.parse(body)
 
